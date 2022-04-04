@@ -1,0 +1,50 @@
+/musicians/musician/name/text()
+
+
+/musicians/musician[name ="Ben Folds"]//albums/album/text()
+
+
+/musicians/musician/albums[album ="Lateralus"]/parent::node()/name/text()
+
+
+/musicians/musician[contains(genre,"Pop")]/(name/text()|genre)
+
+
+/musicians/musician[@type= "solo"]/name
+
+
+/musicians/musician[@type= "solo"][2]/(name/text(),genre)
+
+
+/musicians/musician[name= "Ben Folds"]/albums/album[4]/text()
+
+
+/musicians/musician/albums/album[@year >= 2008]/text()
+
+
+let $out :=
+(
+for $a in /musicians/musician
+let $x := (($a/albums/album[last()]/@year - $a/albums/album[1]/@year)+1) div (count($a/albums/album))
+return <artist><name>{$a/name/text()}</name><rate>{$x,"year(s)"}</rate></artist>
+)
+for $b in $out
+order by $b/rate ascending
+return $b
+
+
+
+let 
+$soloPeople :=
+(
+for $a in /musicians/musician
+where $a/@type = "solo"
+return <artist>{"NAME: ",$a/name/text(),"     GENRE: ",$a/genre/text(),"     NUMBER OF ALBUMS:",count($a/albums/album),"     LATEST ALBUM: ",$a/albums/album[last()]/text()}</artist>
+),
+$bandPeople :=
+(
+for $a in /musicians/musician
+where $a/@type = "band"
+return <artist>{"NAME: ",$a/name/text(),"     GENRE: ",$a/genre/text(),"     MEMBERS:",(for $b in $a/members/member return ( "",$b/first_name/text(),"", $b/last/text())),"     NUMBER OF ALBUMS:",count($a/albums/album),"     LATEST ALBUM: ",$a/albums/album[last()]/text()}</artist>
+)
+return ((for $b in $soloPeople return $b/text()),(for $c in $bandPeople return $c/text()))
